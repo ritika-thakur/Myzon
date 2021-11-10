@@ -9,6 +9,7 @@ const {
   loginUser,
   registerUser, 
   verifyOTP,
+  updateUserProfile,
   handleAdmin
 } = require("../controllers/auth.controller");
 
@@ -23,5 +24,11 @@ router.post("/verify", verifyOTP);
 router.get("/me", checkAuth, fetchCurrentUser);
 
 router.get("/admin", checkAuth, checkAdmin, handleAdmin);
+
+router.post("/updateprofile", upload.single('image'), updateUserProfile);
+
+router.get("/cart", shoppingCart);
+
+router.post("/cart", )
 
 module.exports = router;
