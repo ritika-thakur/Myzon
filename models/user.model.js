@@ -1,25 +1,7 @@
+const mongoose = require("mongoose");
 const { model, Schema } = require("mongoose");
 const Product = require("../models/product.model");
-
-
-let updatedDate = new Date();
-
-
-
-const cartSchema = new Schema[{
-    updatedAt: updatedDate,
-    createdAt: updatedDate,
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    },
-    products: [{
-      type: mongoose.Schema.Types._id,
-      ref: "Products"
-    }],
-    totalCost: Number
-}];
-
+const Cart = require("./cart.model");
 
 
 const userSchema = new Schema(
@@ -60,12 +42,7 @@ const userSchema = new Schema(
      type : String,
      enum:["ADMIN","USER"],
      default:"USER",
-    },
-    wishlist: {
-      type: mongoose.Schema.Types._id,
-      ref: "Product"
-    },
-    cart: [cartSchema],
+    },   
 
    phoneOtp:String
 

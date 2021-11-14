@@ -1,4 +1,5 @@
-const {Cart, User} = require("../models/user.model");
+const User = require("../models/user.model");
+const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const multer = require('multer');
 
@@ -220,61 +221,16 @@ exports.handleAdmin = async (req, res, next) => {
   }
 };
 
-// --------------- update user profile -------------------------
-
-exports.updateUserProfile =  async (req, res, next) => {
-  try {
-
-    const storage = multer.diskStorage({
-      destination: (req, file, cb) => {
-        cb(null, 'uploads')
-      },
-      filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + Date.now())
-      }
-    });
-
-    const {phone} = req.body.phone;
-    const new_name = req.body.name;
-    const new_add = req.body.address;
-    const new_img = {data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
-    contentType: 'image/png'}
-    const updated_details = {
-      name: new_name,
-      address: new_add,
-      image: new_img
-    }
-    
-
-    if (!user) {
-      next({
-        status: 400,
-        message: USER_NOT_FOUND_ERR
-      });
-      return;
-    }
-    if (user) {
-      const user = await User.findOneAndUpdate({phone}, {$set: {
-        name: new_name,
-        address: new_add,
-        image: new_img
-      }}
-      );
-
-    }
-  } catch (error) {
-    next(error);
-  }
-};
- 
-// -------------- cart --------------------- //
 
 
-exports.shoppingCart = async (req, res, next) => {
+// ------------- Log Out --------------------//
+
+exports.logout = async (req, res, next) => {
   try{
-    let { added_item }= req.body.addToCart;
-    const additem = new Cart{
-      
-    }
+    res.redirect('/');
+  }catch(err){
+    var err = new Error('You are not logged in!');
+    err.status = 403;
+    next(err);
   }
 }

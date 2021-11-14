@@ -3,11 +3,18 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
-
 const { PORT, MONGODB_URI, NODE_ENV,ORIGIN } = require("./config");
 const { API_ENDPOINT_NOT_FOUND_ERR, SERVER_ERR } = require("./errors");
 
-const authRoutes = require("routes/auth.route");
+const indexRouter = require("./routes/index");
+//const corsRouter = require("./routes/cors.route");
+const authRoutes = require("./routes/auth.route");
+const productRouter = require("./routes/product.route");
+const orderRouter = require("./routes/order.route");
+const uploadRouter = require("./routes/upload.route");
+const cartRouter = require("./routes/cart.route");
+const wishlistRouter = require("./routes/wishList.route");
+
 
 const app = express();
 
@@ -21,13 +28,15 @@ app.use(
   })
 );
 
-
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
 
 if (NODE_ENV === "development") {
   const morgan = require("morgan");
   app.use(morgan("dev"));
 }
 
+app.use('/uploads',express.static('uploads'))
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -39,6 +48,12 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/auth", authRoutes);
+app.use("/", indexRouter);
+app.use("/products", productRouter);
+app.use("/orders", orderRouter);
+app.use("/upload", uploadRouter);
+app.use("/cart", cartRouter);
+app.use("/wishlist", wishlistRouter);
 
 
 
@@ -61,6 +76,7 @@ app.use((err, req, res, next) => {
     data,
   });
 });
+
 
 async function main() {
   try {

@@ -1,12 +1,10 @@
-const { model, Schema } = require("mongoose");
+const mongoose = require("mongoose");
+require('mongoose-currency').loadType(mongoose);
+const Currency = mongoose.Types.Currency;
 
 
-const productSchema = new Schema({
-    _id: {
-        type: Number,
-        required: true,
-        unique: true
-    },
+const productSchema = new mongoose.Schema({ 
+    
     name: {
         type: String,
         required: true,
@@ -15,8 +13,7 @@ const productSchema = new Schema({
         type: String,
         required: true
     },
-    image: {
-        data: Buffer,
+    productImage: {
         type: String,
         required: true
     },
@@ -28,13 +25,9 @@ const productSchema = new Schema({
         type: Currency,
         required: true,
         min: 0
-    },
-    seller: {
-        type: String,
-        required: true
     }
 }, {
     timestamps: true
 });
 
-module.exports = model("Product", productSchema);
+module.exports = mongoose.model("Product", productSchema);
