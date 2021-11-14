@@ -58,39 +58,41 @@ exports.createNewUser = async  (req, res, next) => {
         status: 400,
         message: PHONE_ALREADY_EXISTS_ERR
       });
-      return;
-    };
+      
+    }else{
+      const createUser = new User({
+        phone,
+        name,
+        email,
+        address,
+        image,
+        role: phone === process.env.ADMIN_PHONE ? "ADMIN" : "USER"
+      });
+  
+  
+      const user = await createUser.save();
+  
+      res.status(200).json({
+        type: "success",
+        message: "Account created OTP sended to mobile number",
+        data: {
+          userId: user._id,
+        },
+      });
+  
+      const otp = generateOTP(6);
+      user.phoneOtp = otp;
+      await user.save();
+      await fast2sms({
+          message: `Your OTP is ${otp}`,
+          contactNumber: user.phone,
+        },
+        next
+      );  
 
-    const createUser = new User({
-      phone,
-      name,
-      email,
-      address,
-      image,
-      role: phone === process.env.ADMIN_PHONE ? "ADMIN" : "USER"
-    });
+    }
 
-
-    const user = await createUser.save();
-
-    res.status(200).json({
-      type: "success",
-      message: "Account created OTP sended to mobile number",
-      data: {
-        userId: user._id,
-      },
-    });
-
-    const otp = generateOTP(6);
-    user.phoneOtp = otp;
-    await user.save();
-    await fast2sms({
-        message: `Your OTP is ${otp}`,
-        contactNumber: user.phone,
-      },
-      next
-    );
-  } catch (error) {
+      } catch (error) {
     next(error);
   }
 };
@@ -114,27 +116,26 @@ exports.loginWithPhoneOtp = async (req, res, next) => {
         status: 400,
         message: PHONE_NOT_FOUND_ERR
       });
-      return;
+    }else{
+      res.status(201).json({
+        type: "success",
+        message: "OTP sended to your registered phone number",
+        data: {
+          userId: user._id,
+        },
+      });
+  
+      const otp = generateOTP(6);
+      user.phoneOtp = otp;
+      user.isAccountVerified = true;
+      await user.save();
+      await fast2sms({
+          message: `Your OTP is ${otp}`,
+          contactNumber: user.phone,
+        },
+        next
+      );
     }
-
-    res.status(201).json({
-      type: "success",
-      message: "OTP sended to your registered phone number",
-      data: {
-        userId: user._id,
-      },
-    });
-
-    const otp = generateOTP(6);
-    user.phoneOtp = otp;
-    user.isAccountVerified = true;
-    await user.save();
-    await fast2sms({
-        message: `Your OTP is ${otp}`,
-        contactNumber: user.phone,
-      },
-      next
-    );
   } catch (error) {
     next(error);
   }
@@ -142,7 +143,7 @@ exports.loginWithPhoneOtp = async (req, res, next) => {
 
 // ---------------------- verify phone otp -------------------------
 
-exports.verifyPhoneOtp = async (req, res, next) => {
+exports.verifyPhoneOTP = async (req, res, next) => {
   try {
     const {
       otp,
@@ -150,58 +151,40 @@ exports.verifyPhoneOtp = async (req, res, next) => {
     } = req.body;
     const user = await User.findById(userId);
     if (!user) {
-      next({
-        status: 400,
+      res.status(400).json({
+        type: "User not found",
         message: USER_NOT_FOUND_ERR
       });
-      return;
-    }
-
-    if (user.phoneOtp !== otp) {
-      next({
-        status: 400,
-        message: INCORRECT_OTP_ERR
+    }else{
+      if (user.phoneOtp !== otp) {
+        res.status(400).json({
+          type: "Wrong Otp",
+          message: WRONG_OTP
+        });
+      }else{
+        
+      }
+      const token = createJwtToken({
+        userId: user._id
       });
-      return;
+  
+      user.phoneOtp = "";
+      await user.save();
+  
+      res.status(201).json({
+        type: "success",
+        message: "OTP verified successfully",
+        data: {
+          token,
+          userId: user._id,
+        },
+      });
     }
-    const token = createJwtToken({
-      userId: user._id
-    });
-
-    user.phoneOtp = "";
-    await user.save();
-
-    res.status(201).json({
-      type: "success",
-      message: "OTP verified successfully",
-      data: {
-        token,
-        userId: user._id,
-      },
-    });
   } catch (error) {
-    next(error);
+    res.json(error);
   }
 };
 
-
-// --------------- fetch current user -------------------------
-
-exports.fetchCurrentUser = async (req, res, next) => {
-  try {
-    const currentUser = res.locals.user;
-
-    return res.status(200).json({
-      type: "success",
-      message: "fetch current user",
-      data: {
-        user: currentUser,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 // --------------- admin access only -------------------------
 
@@ -217,7 +200,8 @@ exports.handleAdmin = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    var err = new Error('Permission Denied!');
+    err.status = 403;
   }
 };
 
@@ -231,6 +215,5 @@ exports.logout = async (req, res, next) => {
   }catch(err){
     var err = new Error('You are not logged in!');
     err.status = 403;
-    next(err);
   }
 }

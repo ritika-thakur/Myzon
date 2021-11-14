@@ -33,7 +33,7 @@ const userSchema = new Schema(
       unique: true,
     },
 
-    image: {
+    userImage: {
       data: Buffer,
       type: String,
     },
@@ -50,7 +50,5 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
-
-module.exports = model("Cart", cartSchema);
 module.exports = model("User", userSchema);
  

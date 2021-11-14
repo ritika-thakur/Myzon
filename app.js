@@ -1,7 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const path = require('path');
 
 const { PORT, MONGODB_URI, NODE_ENV,ORIGIN } = require("./config");
 const { API_ENDPOINT_NOT_FOUND_ERR, SERVER_ERR } = require("./errors");
@@ -14,6 +16,7 @@ const orderRouter = require("./routes/order.route");
 const uploadRouter = require("./routes/upload.route");
 const cartRouter = require("./routes/cart.route");
 const wishlistRouter = require("./routes/wishList.route");
+const userRouter = require("./routes/user.route");
 
 
 const app = express();
@@ -54,6 +57,7 @@ app.use("/orders", orderRouter);
 app.use("/upload", uploadRouter);
 app.use("/cart", cartRouter);
 app.use("/wishlist", wishlistRouter);
+app.use('/userprofile', userRouter);
 
 
 
@@ -82,8 +86,6 @@ async function main() {
   try {
     await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
-      useCreateIndex: true,
-      useFindAndModify: false,
       useUnifiedTopology: true,
     });
 

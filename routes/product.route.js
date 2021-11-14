@@ -5,10 +5,9 @@ const multer = require("multer");
 
 const checkAuth = require("../middlewares/checkAuth");
 const checkAdmin = require("../middlewares/checkAdmin");
-const checkVendor = require("../middlewares/checkVendor");
 
-const Order = require("../models/order");
-const Product = require("../models/product");
+const Order = require("../models/order.model");
+const Product = require("../models/product.model");
 const { PORT } = require("../config");
 
 const storage = multer.diskStorage({
@@ -35,7 +34,6 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-const Product = require("../models/product");
 
 productRouter.get("/", (req, res, next) => {
   Product.find()
@@ -75,7 +73,7 @@ productRouter.get("/", (req, res, next) => {
     });
 });
 
-productRouter.post("/", checkAuth, checkVendor, upload.single('productImage'), (req, res, next) => {
+productRouter.post("/", checkAuth, upload.single('productImage'), (req, res, next) => {
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
@@ -113,7 +111,7 @@ productRouter.post("/", checkAuth, checkVendor, upload.single('productImage'), (
 productRouter.get("/:productId",  (req, res, next) => {
   const id = req.params.productId;
   Product.findById(id)
-    .select('name price _id description productImage category image')
+    .select('name price _id description productImage category productImage')
     .exec()
     .then(doc => {
       console.log("From database", doc);
@@ -137,7 +135,7 @@ productRouter.get("/:productId",  (req, res, next) => {
     });
 });
 
-productRouter.patch("/:productId", checkVendor, (req, res, next) => {
+productRouter.patch("/:productId", (req, res, next) => {
   const id = req.params.productId;
   const updateOps = {};
   for (const ops of req.body) {
@@ -162,7 +160,7 @@ productRouter.patch("/:productId", checkVendor, (req, res, next) => {
     });
 });
 
-productRouter.delete("/:productId", checkVendor, (req, res, next) => {
+productRouter.delete("/:productId", (req, res, next) => {
   const id = req.params.productId;
   Product.remove({ _id: id })
     .exec()

@@ -29,42 +29,67 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
+// --------------- fetch current user -------------------------
+
+exports.fetchCurrentUser = async (req, res, next) => {
+  const id = req.params.productId;
+  Product.findById(id)
+    .select('name address email phone userImage')
+    .exec()
+    .then(doc => {
+      console.log("From database", doc);
+      if (doc) {
+        res.status(200).json({
+            product: doc,
+            request: {
+                type: 'GET',
+                url: PORT + "/:userId"
+            }
+        });
+      } else {
+        res
+          .status(404)
+          .json({ message: "No valid entry found for provided ID" });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: err });
+    });
+};
+
 // --------------- update user profile -------------------------
 
 exports.updateUserProfile =  async (req, res, next) => {
-    try {
   
-  
-      const {phone} = req.body.phone;
-      const new_name = req.body.name;
-      const new_add = req.body.address;
-      const new_img = {data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
-      contentType: 'image/png'}
-      const updated_details = {
-        name: new_name,
-        address: new_add,
-        image: new_img
-      }
+    const id = req.params.userId;
+    const {phone} = req.body.phone; 
+    const new_name = req.body.name;
+    const new_add = req.body.address;
+    const new_img = req.file.path;
       
-  
-      if (!user) {
-        next({
-          status: 400,
-          message: USER_NOT_FOUND_ERR
+    await User.findOneAndUpdate({_id: id}, {$set: {
+      name: new_name,
+      address: new_add,
+      userImage: new_img
+        }
+      }).exec()
+      .then(result => {
+        res.status(200).json({
+            message: 'Product updated',
+            request: {
+                type: 'GET',
+                url: PORT + "/products/" + id
+            }
         });
-        return;
-      }
-      if (user) {
-        const user = await User.findOneAndUpdate({phone}, {$set: {
-          name: new_name,
-          address: new_add,
-          image: new_img
-        }}
-        );
-  
-      }
-    } catch (error) {
-      next(error);
-    }
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+    user.save();
   };
+  
   

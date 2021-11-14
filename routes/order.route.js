@@ -4,16 +4,15 @@ const mongoose = require("mongoose");
 
 const checkAuth = require("../middlewares/checkAuth");
 const checkAdmin = require("../middlewares/checkAdmin");
-const checkVendor = require("../middlewares/checkVendor");
 
-const Order = require("../models/order");
-const Product = require("../models/product");
+const Order = require("../models/order.model");
+const Product = require("../models/product.model");
 const { PORT } = require("../config");
 
 // Handle incoming GET requests to /orders
 orderRouter.get("/", checkAuth, (req, res, next) => {
   Order.find()
-    .select("product quantity _id")
+    .select("product quantity _id dvlStatus")
     .exec()
     .then(docs => {
       res.status(200).json({
@@ -23,6 +22,7 @@ orderRouter.get("/", checkAuth, (req, res, next) => {
             _id: doc._id,
             product: doc.product,
             quantity: doc.quantity,
+            dvlStatus: doc.dvlStatus,
             request: {
               type: "GET",
               url: PORT +"/orders/" + doc._id
@@ -49,7 +49,8 @@ orderRouter.post("/", checkAuth, (req, res, next) => {
       const order = new Order({
         _id: mongoose.Types.ObjectId(),
         quantity: req.body.quantity,
-        product: req.body.productId
+        product: req.body.productId,
+        dvlstatus: req.body.dvlstatus
       });
       return order.save();
     })
@@ -60,7 +61,8 @@ orderRouter.post("/", checkAuth, (req, res, next) => {
         createdOrder: {
           _id: result._id,
           product: result.product,
-          quantity: result.quantity
+          quantity: result.quantity,
+          dvlStatus: result.dvlstatus
         },
         request: {
           type: "GET",
@@ -89,7 +91,7 @@ orderRouter.get("/:orderId", checkAuth, (req, res, next) => {
         order: order,
         request: {
           type: "GET",
-          url: PORT+"orders"
+          url: PORT+"/orders"
         }
       });
     })

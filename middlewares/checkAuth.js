@@ -9,31 +9,32 @@ const { verifyJwtToken } = require("../utils/token.util")
 module.exports = async (req, res, next) => {
     try {
         const header = req.headers.authorization
+        var flag=0
 
-        if (!header) {
+        if (!header && flag==0) {
             next({ status: 403, message: AUTH_HEADER_MISSING_ERR })
-            return
+            flag=1
         }
 
         const token = header.split("Bearer ")[1]
 
-        if (!token) {
+        if (!token && flag==0) {
             next({ status: 403, message: AUTH_TOKEN_MISSING_ERR })
-            return
+            flag=1
         }
 
         const userId = verifyJwtToken(token,next)
 
-        if (!userId) {
+        if (!userId && flag==0) {
             next({ status: 403, message: JWT_DECODE_ERR })
-            return
+            flag=1
         }
 
         const user = await User.findById(userId)
 
-        if (!user) {
+        if (!user && flag==0) {
             next({status: 404, message: USER_NOT_FOUND_ERR })
-            return
+            flag=1
         }
 
         res.locals.user = user
