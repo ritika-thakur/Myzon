@@ -1,5 +1,9 @@
 const fast2sms = require("fast-two-sms");
 const {FAST2SMS} = require("../config");
+require('dotenv').config();
+
+// var options = {API_KEY: YOUR_API_KEY};
+// fast2sms.init(options);
 
 exports.generateOTP = (otp_length) => {
   var digits = "0123456789";

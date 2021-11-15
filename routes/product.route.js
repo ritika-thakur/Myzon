@@ -21,9 +21,9 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return callback(new Error("You can upload only image files!"), false);
+        return cb(new Error("You can upload only image files!"), false);
     }
-    callback(null, true);
+    cb(null, true);
 }
 
 const upload = multer({
@@ -73,13 +73,14 @@ productRouter.get("/", (req, res, next) => {
     });
 });
 
-productRouter.post("/", checkAuth, upload.single('productImage'), (req, res, next) => {
+productRouter.post("/", upload.single('productImage'), (req, res, next) => {
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
     description: req.body.description,
-    productImage: req.file.path
+    productImage: req.file.path,
+    category: req.body.category
   });
   product
     .save()
@@ -92,6 +93,7 @@ productRouter.post("/", checkAuth, upload.single('productImage'), (req, res, nex
             price: result.price,
             description: result.description,
             productImage: result.productImage,
+            category: result.category,
             _id: result._id,
             request: {
                 type: 'GET',
@@ -111,7 +113,7 @@ productRouter.post("/", checkAuth, upload.single('productImage'), (req, res, nex
 productRouter.get("/:productId",  (req, res, next) => {
   const id = req.params.productId;
   Product.findById(id)
-    .select('name price _id description productImage category productImage')
+    .select('name price _id description category productImage')
     .exec()
     .then(doc => {
       console.log("From database", doc);

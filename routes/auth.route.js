@@ -18,7 +18,11 @@ const {
 router.get("/", cors.corsWithOptions, function(req, res, next){
 });
 
+
+//router.post("/verify_registration", verifyRegistration);
+
 router.post("/register", createNewUser);
+
 
 router.post("/login_with_phone", loginWithPhoneOtp);
 

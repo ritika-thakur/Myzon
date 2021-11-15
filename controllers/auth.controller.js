@@ -2,6 +2,7 @@ const User = require("../models/user.model");
 const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const multer = require('multer');
+const multiparty = require("multiparty");
 
 const {
   PHONE_NOT_FOUND_ERR,
@@ -12,10 +13,10 @@ const {
   ACCESS_DENIED_ERR,
 } = require("../errors");
 
-const {
-  checkPassword,
-  hashPassword
-} = require("../utils/password.util");
+// const {
+//   checkPassword,
+//   hashPassword
+// } = require("../utils/password.util");
 const {
   createJwtToken
 } = require("../utils/token.util");
@@ -96,8 +97,6 @@ exports.createNewUser = async  (req, res, next) => {
     next(error);
   }
 };
-
-
 
 // ------------ login with phone otp ----------------------------------
 
