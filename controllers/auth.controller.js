@@ -2,7 +2,7 @@ const User = require("../models/user.model");
 const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const multer = require('multer');
-const multiparty = require("multiparty");
+
 
 const {
   PHONE_NOT_FOUND_ERR,
@@ -17,14 +17,63 @@ const {
 //   checkPassword,
 //   hashPassword
 // } = require("../utils/password.util");
-const {
-  createJwtToken
-} = require("../utils/token.util");
+// const {
+//   createJwtToken
+// } = require("../utils/token.util");
 
 const {
   generateOTP,
   fast2sms
 } = require("../utils/otp.util");
+
+//-----------------------generate otp-------------------------------------
+
+exports.registerOrLogin = async (req, res, next) =>{
+  try{
+    const phone = req.body.phone;
+    
+    const otp = generateOTP(4);
+    console.log("User Otp: "+otp);
+     // user.phoneOtp = otp;
+    
+  await User.findOrCreate({phone: phone})
+    .then(function(result){
+      console.log(result);
+      const userFound =  result.doc;  
+      console.log(userFound.phone);
+      User.findOneAndUpdate({phone: userFound.phone}, {$set : {"phoneOtp": otp}},
+      {upsert:false,
+      multi:false}).then( function(val){
+        res.status(200).json({
+        uid: userFound._id
+      });},function(val){res.status(404).json({
+        message: USER_NOT_FOUND_ERR
+      });})
+      
+    });
+
+
+
+  // User.create({phone: phone}, {phoneOtp: otp}, function(err, val) {
+  //   User.findOrCreate({phone: phone}, {phoneOtp: otp}, function(err, user) {
+  //     res.status(200).json({
+  //            uid: user
+  //          });
+  //   })
+  // });
+
+
+  //   const user = await User.findOne({
+  //     phone
+  //   });
+    
+  //  await user.save();
+
+  }catch(err){
+    next(err);
+  }
+    
+}
 
 // --------------------- create new user ---------------------------------
 
@@ -49,7 +98,6 @@ exports.createNewUser = async  (req, res, next) => {
       address
     } = req.body;
 
-    let {image} = {data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)), contentType: 'image/png'};
 
 
     const phoneExist = await User.findOne({phone});
@@ -66,7 +114,6 @@ exports.createNewUser = async  (req, res, next) => {
         name,
         email,
         address,
-        image,
         role: phone === process.env.ADMIN_PHONE ? "ADMIN" : "USER"
       });
   
@@ -81,9 +128,7 @@ exports.createNewUser = async  (req, res, next) => {
         },
       });
   
-      const otp = generateOTP(6);
-      user.phoneOtp = otp;
-      await user.save();
+      
       await fast2sms({
           message: `Your OTP is ${otp}`,
           contactNumber: user.phone,
@@ -124,7 +169,7 @@ exports.loginWithPhoneOtp = async (req, res, next) => {
         },
       });
   
-      const otp = generateOTP(6);
+      const otp = generateOTP(4);
       user.phoneOtp = otp;
       user.isAccountVerified = true;
       await user.save();
@@ -146,40 +191,38 @@ exports.verifyPhoneOTP = async (req, res, next) => {
   try {
     const {
       otp,
-      userId
+      phone
     } = req.body;
-    const user = await User.findById(userId);
+    const user = await User.findOne({phone: phone});
     if (!user) {
       res.status(400).json({
         type: "User not found",
-        message: USER_NOT_FOUND_ERR
+        message: "USER_NOT_FOUND_ERR"
       });
     }else{
-      if (user.phoneOtp !== otp) {
+      if (user.phoneOtp != otp) {
+        console.log("Wrong Otp")
         res.status(400).json({
           type: "Wrong Otp",
-          message: WRONG_OTP
+          message: "Wrong OTP"
         });
-      }else{
-        
+       }else{
+      //   const token = createJwtToken({
+      //     userId: user._id
+      //   });
+
+      //   user.token = token;
+    
+        res.status(201).json({
+          type: "success",
+          message: "OTP verified successfully",
+          data: user, 
+        });
       }
-      const token = createJwtToken({
-        userId: user._id
-      });
-  
-      user.phoneOtp = "";
-      await user.save();
-  
-      res.status(201).json({
-        type: "success",
-        message: "OTP verified successfully",
-        data: {
-          token,
-          userId: user._id,
-        },
-      });
+      
     }
   } catch (error) {
+    console.log(error);
     res.json(error);
   }
 };

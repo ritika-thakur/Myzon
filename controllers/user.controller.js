@@ -1,7 +1,9 @@
 const User = require("../models/user.model");
 const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
+const mongoose = require("mongoose");
 
+const { PORT, MONGODB_URI, NODE_ENV,ORIGIN } = require("../config");
 const multer = require('multer');
 const uploadRouter = require("../routes/upload.route")
 
@@ -16,9 +18,9 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return callback(new Error("You can upload only image files!"), false);
+        return cb(new Error("You can upload only image files!"), false);
     }
-    callback(null, true);
+    cb(null, true);
 }
 
 const upload = multer({
@@ -32,19 +34,15 @@ const upload = multer({
 // --------------- fetch current user -------------------------
 
 exports.fetchCurrentUser = async (req, res, next) => {
-  const id = req.params.productId;
-  Product.findById(id)
+  const id = req.body.userId;
+  User.findById(id)
     .select('name address email phone userImage')
     .exec()
     .then(doc => {
-      console.log("From database", doc);
+      console.log("From database", doc)
       if (doc) {
         res.status(200).json({
-            product: doc,
-            request: {
-                type: 'GET',
-                url: PORT + "/:userId"
-            }
+            data: doc,
         });
       } else {
         res
@@ -62,25 +60,20 @@ exports.fetchCurrentUser = async (req, res, next) => {
 
 exports.updateUserProfile =  async (req, res, next) => {
   
-    const id = req.params.userId;
-    const {phone} = req.body.phone; 
+    const userId = req.body.userId; 
     const new_name = req.body.name;
-    const new_add = req.body.address;
     const new_img = req.file.path;
+    const email = req.body.email;
       
-    await User.findOneAndUpdate({_id: id}, {$set: {
+    await User.findOneAndUpdate({_id: userId}, {$set: {
       name: new_name,
-      address: new_add,
-      userImage: new_img
+      userImage: new_img,
+      email: email
         }
       }).exec()
       .then(result => {
         res.status(200).json({
-            message: 'Product updated',
-            request: {
-                type: 'GET',
-                url: PORT + "/products/" + id
-            }
+            message: 'User updated',
         });
       })
       .catch(err => {
@@ -92,4 +85,83 @@ exports.updateUserProfile =  async (req, res, next) => {
     user.save();
   };
   
+/////////////////////////////// Add Address /////////////////////////////////
+
+exports.addaddress = async (req, res, next) => {
+  try{
+    const userId = req.body.userId;
+  const recname = req.body.recname;
+  const recphone = req.body.recphone;
+  const pincode = req.body.pincode;
+  const addLine1 = req.body.addLine1;
+  const addLine2 = req.body.addLine2;
+  const landmark = req.body.landmark;
+
+  const address = [{
+    recname: recname,
+    recphone: recphone,
+    pincode: pincode,
+    addLine1: addLine1,
+    addLine2: addLine2,
+    landmark: landmark
+  }]
+
+  const user = await User.findOne({userId});
+
+  user.address.push({ recname, recphone, pincode, addLine1, addLine2, landmark})
+
+  res.status(200).json({
+      message: 'Address updated',
+  });
+
+  user.save();
+  }
+  catch(err) {
+  console.log(err);
+  res.status(500).json({
+    error: err
+  });
+};
+
+};
+
+
+//////////////////////Update Address///////////////////////////
+
+exports.updateAddress =  async (req, res, next) => {
+    
+  try{
+    const userId = req.body.userId;
+    const addressId = req.body.addressId;
+    const recname = req.body.recname;
+    const recphone = req.body.recphone;
+    const pincode = req.body.pincode;
+    const addLine1 = req.body.addLine1;
+    const addLine2 = req.body.addLine2;
+    const landmark = req.body.landmark;
+
+  const address = [{
+    recname: recname,
+    recphone: recphone,
+    pincode: pincode,
+    addLine1: addLine1,
+    addLine2: addLine2,
+    landmark: landmark
+  }]
+
+  const user = await User.findByIdAndUpdate({_id: userId, address: {_id: addressId} }, {$set: {address: address} })
   
+        res.status(200).json({
+            message: 'User updated'
+        });
+
+
+  user.save();
+
+  }catch(err){
+    console.log(err);
+    res.status(500).json({
+      message: "Some error occured."
+    });    
+  }
+}

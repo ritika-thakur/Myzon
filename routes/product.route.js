@@ -37,7 +37,7 @@ const upload = multer({
 
 productRouter.get("/", (req, res, next) => {
   Product.find()
-    .select("name price _id description productImage category")
+    .select("name price _id description productImage category subcategory location")
     .exec()
     .then(docs => {
       const response = {
@@ -49,6 +49,8 @@ productRouter.get("/", (req, res, next) => {
             _id: doc._id,
             description: doc.description,
             category: doc.category, 
+            subcategory: doc.subcategory,
+            location: doc.location,
             productImage: doc.productImage,
             request: {
               type: "GET",
@@ -57,13 +59,8 @@ productRouter.get("/", (req, res, next) => {
           };
         })
       };
-      //   if (docs.length >= 0) {
       res.status(200).json(response);
-      //   } else {
-      //       res.status(404).json({
-      //           message: 'No entries found'
-      //       });
-      //   }
+      
     })
     .catch(err => {
       console.log(err);
@@ -79,8 +76,10 @@ productRouter.post("/", upload.single('productImage'), (req, res, next) => {
     name: req.body.name,
     price: req.body.price,
     description: req.body.description,
-    productImage: req.file.path,
-    category: req.body.category
+    productImage: req.file,
+    category: req.body.category,
+    subcategory: req.body.subcategory,
+    location: req.body.location
   });
   product
     .save()
@@ -94,6 +93,8 @@ productRouter.post("/", upload.single('productImage'), (req, res, next) => {
             description: result.description,
             productImage: result.productImage,
             category: result.category,
+            subcategory: result.subcategory,
+            location: result.location,
             _id: result._id,
             request: {
                 type: 'GET',
@@ -113,7 +114,7 @@ productRouter.post("/", upload.single('productImage'), (req, res, next) => {
 productRouter.get("/:productId",  (req, res, next) => {
   const id = req.params.productId;
   Product.findById(id)
-    .select('name price _id description category productImage')
+    .select('name price _id description category productImage subcategory location')
     .exec()
     .then(doc => {
       console.log("From database", doc);
@@ -137,15 +138,30 @@ productRouter.get("/:productId",  (req, res, next) => {
     });
 });
 
-productRouter.patch("/:productId", (req, res, next) => {
-  const id = req.params.productId;
-  const updateOps = {};
-  for (const ops of req.body) {
-    updateOps[ops.propName] = ops.value;
+productRouter.put("/updateprod", (req, res, next) => {
+  try{
+    const id = req.body._id;
+  
+  const price = req.body.price;
+  const name = req.body.name;
+  const description = req.body.description;
+  const category = req.body.category;
+  const subcategory = req.body.subcategory;
+  const location = req.body.location;
+  const productImage = req.file;
+
+  const productUpdates = {
+    price: price,
+    name: name,
+    description: description,
+    category: category,
+    subcategory: subcategory,
+    location: location,
+    productImage: productImage
   }
-  Product.update({ _id: id }, { $set: updateOps })
-    .exec()
-    .then(result => {
+
+  Product.updateOne({ _id: id }, { $set: {productUpdates} })
+    
       res.status(200).json({
           message: 'Product updated',
           request: {
@@ -153,6 +169,48 @@ productRouter.patch("/:productId", (req, res, next) => {
               url: PORT + "/products/" + id
           }
       });
+  
+  }catch(err){
+      console.log(err);
+      res.status(500).json({
+        error: err
+      });
+    }
+  });
+  
+
+productRouter.post("/productbytype", async (req, res, next) => {
+  try{
+  const category = req.body.category;
+  const subcategory = req.body.subcategory;
+  const location = req.body.location;
+
+  if (category == null && subcategory == null){
+    Product.find({location:{$in:location}})
+    .select("name price _id description productImage category subcategory location")
+    .exec()
+    .then(docs => {
+      const response = {
+        count: docs.length,
+        products: docs.map(doc => {
+          return {
+            name: doc.name,
+            price: doc.price,
+            _id: doc._id,
+            description: doc.description,
+            category: doc.category, 
+            subcategory: doc.subcategory,
+            location: doc.location,
+            productImage: doc.productImage,
+            request: {
+              type: "GET",
+              url: PORT + "/products/" + doc._id
+            }
+          };
+        })
+      };
+      res.status(200).json(response);
+      
     })
     .catch(err => {
       console.log(err);
@@ -160,7 +218,83 @@ productRouter.patch("/:productId", (req, res, next) => {
         error: err
       });
     });
-});
+  }else if(subcategory == null){
+    Product.find({location:{$in:location}, category: {$in:category}})
+    .select("name price _id description productImage category subcategory location")
+    .exec()
+    .then(docs => {
+      const response = {
+        count: docs.length,
+        products: docs.map(doc => {
+          return {
+            name: doc.name,
+            price: doc.price,
+            _id: doc._id,
+            description: doc.description,
+            category: doc.category, 
+            subcategory: doc.subcategory,
+            location: doc.location,
+            productImage: doc.productImage,
+            request: {
+              type: "GET",
+              url: PORT + "/products/" + doc._id
+            }
+          };
+        })
+      };
+      res.status(200).json(response);
+      
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        error: err
+      });
+    });
+  }else{
+    Product.find({location:{$in:location}, category:{$in:category}, subcategory:{$in:subcategory}})
+    .select("name price _id description productImage category subcategory location")
+    .exec()
+    .then(docs => {
+      const response = {
+        count: docs.length,
+        products: docs.map(doc => {
+          return {
+            name: doc.name,
+            price: doc.price,
+            _id: doc._id,
+            description: doc.description,
+            category: doc.category, 
+            subcategory: doc.subcategory,
+            location: doc.location,
+            productImage: doc.productImage,
+            request: {
+              type: "GET",
+              url: PORT + "/products/" + doc._id
+            }
+          };
+        })
+      };
+      res.status(200).json(response);
+      
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        error: err
+      });
+    });
+  }
+
+  }catch(err){
+    console.log(err);
+      res.status(500).json({
+        error: err
+      });
+  }
+  
+})
+
 
 productRouter.delete("/:productId", (req, res, next) => {
   const id = req.params.productId;

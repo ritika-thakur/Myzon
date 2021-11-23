@@ -1,22 +1,17 @@
 const express = require("express");
 const userRouter = express.Router();
 const cors = require("./cors.route");
-const uploadimage = require("./upload.route");
 const multer = require("multer");
-
+const mongoose = require("mongoose");
 
 const checkAuth = require("../middlewares/checkAuth");
 const checkAdmin = require("../middlewares/checkAdmin");
 
-const indexRouter = require("./index");
 const authRoutes = require("./auth.route");
-const productRouter = require("./product.route");
-const orderRouter = require("./order.route");
-const uploadRouter = require("./upload.route");
 const cartRouter = require("./cart.route");
 const wishlistRouter = require("./wishList.route");
 
-const {updateUserProfile, fetchCurrentUser} = require('../controllers/user.controller');
+const {updateUserProfile, fetchCurrentUser, addaddress, updateAddress} = require('../controllers/user.controller');
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
@@ -29,9 +24,9 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return callback(new Error("You can upload only image files!"), false);
+        return cb(new Error("You can upload only image files!"), false);
     }
-    callback(null, true);
+    cb(null, true);
 }
 
 const upload = multer({
@@ -42,8 +37,12 @@ const upload = multer({
     fileFilter: fileFilter
 });
 
-userRouter.get("/:userId", checkAuth, fetchCurrentUser);
+userRouter.post("/", fetchCurrentUser);
 
-userRouter.post("/:userId", checkAuth, upload.single('userImage'), updateUserProfile);
+userRouter.post("/update",  upload.single('userImage'), updateUserProfile);
+
+userRouter.post("/addaddress", addaddress);
+
+userRouter.put('/updateaddress', updateAddress);
 
 module.exports = userRouter;

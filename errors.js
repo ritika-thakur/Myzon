@@ -10,5 +10,6 @@ exports.JWT_DECODE_ERR = "incorrect token";
 
 exports.USER_NOT_FOUND_ERR = "User not found";
 
+exports.WRONG_OTP = "Wrong OTP";
 
 exports.ACCESS_DENIED_ERR = "Access deny for normal user";

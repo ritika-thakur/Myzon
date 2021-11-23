@@ -6,31 +6,30 @@ const uploadimage = require("./upload.route");
 
 const checkAuth = require("../middlewares/checkAuth");
 const checkAdmin = require("../middlewares/checkAdmin");
-const {
+const {registerOrLogin,
   loginWithPhoneOtp,
   createNewUser, 
   verifyPhoneOTP,
   handleAdmin, 
-  logout
+  logout,
 } = require("../controllers/auth.controller");
 
 
-router.get("/", cors.corsWithOptions, function(req, res, next){
-});
+// router.get("/", cors.corsWithOptions, function(req, res, next){
+// });
+
+router.post("/userAuth", registerOrLogin);
+
+//router.post("/register", createNewUser);
 
 
-//router.post("/verify_registration", verifyRegistration);
-
-router.post("/register", createNewUser);
-
-
-router.post("/login_with_phone", loginWithPhoneOtp);
+//router.post("/login_with_phone", loginWithPhoneOtp);
 
 router.post("/verify", verifyPhoneOTP);
 
 router.get("/admin", checkAuth, checkAdmin, handleAdmin);
 
-router.get('/logout', cors.corsWithOptions, logout);
+//router.get('/logout', cors.corsWithOptions, logout);
 
 
 module.exports = router;
