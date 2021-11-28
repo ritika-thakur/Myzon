@@ -1,0 +1,35 @@
+const express = require("express");
+const router = express.Router();
+const cors = require("./cors.route");
+const uploadimage = require("./upload.route");
+
+
+const checkAuth = require("../middlewares/checkAuth");
+const checkAdmin = require("../middlewares/checkAdmin");
+const {registerOrLogin,
+  loginWithPhoneOtp,
+  createNewUser, 
+  verifyPhoneOTP,
+  handleAdmin, 
+  logout,
+} = require("../controllers/auth.controller");
+
+
+// router.get("/", cors.corsWithOptions, function(req, res, next){
+// });
+
+router.post("/userAuth", registerOrLogin);
+
+//router.post("/register", createNewUser);
+
+
+//router.post("/login_with_phone", loginWithPhoneOtp);
+
+router.post("/verify", verifyPhoneOTP);
+
+router.get("/admin", checkAuth, checkAdmin, handleAdmin);
+
+//router.get('/logout', cors.corsWithOptions, logout);
+
+
+module.exports = router;
