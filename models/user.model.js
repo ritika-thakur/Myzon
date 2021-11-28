@@ -22,9 +22,17 @@ const addressSchema = new Schema({
     type: String,
     trim: true,
   },
-  Landmark: {
+  landmark: {
     type:String,
     trim: true,
+  },
+  city: {
+    type: String,
+    trim: true
+  },
+  state: {
+    type: String,
+    trim: true
   }
 });
 const userSchema = new Schema(
@@ -55,8 +63,8 @@ const userSchema = new Schema(
     },
 
     userImage: {
-      data: Buffer,
       type: String,
+      default: null
     },
     address: [addressSchema],
     role :{

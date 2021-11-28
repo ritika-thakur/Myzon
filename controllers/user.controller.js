@@ -7,12 +7,24 @@ const { PORT, MONGODB_URI, NODE_ENV,ORIGIN } = require("../config");
 const multer = require('multer');
 const uploadRouter = require("../routes/upload.route")
 
+function makeid(length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * 
+charactersLength));
+ }
+ return result;
+}
+
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
         cb(null, './uploads');
     },
     filename:   function(req, file, cb){
-        cb(null, new Date().toISOString + file.originalname);
+        console.log(file.originalname);
+        cb(null, makeid(12) + file.originalname);
     }
 })
 
@@ -62,19 +74,30 @@ exports.updateUserProfile =  async (req, res, next) => {
   
     const userId = req.body.userId; 
     const new_name = req.body.name;
-    const new_img = req.file.path;
+    const new_img = req.file;
     const email = req.body.email;
-      
-    await User.findOneAndUpdate({_id: userId}, {$set: {
+
+    let updates = {
       name: new_name,
-      userImage: new_img,
       email: email
-        }
+    }; 
+
+    if (new_img != null){
+       updates = {
+        name: new_name,
+        userImage: new_img.path,
+        email: email
+          } ;
+    }
+
+    
+      
+    await User.findOneAndUpdate({_id: userId}, {$set: updates
       }).exec()
       .then(result => {
         res.status(200).json({
             message: 'User updated',
-        });
+        }); 
       })
       .catch(err => {
         console.log(err);
@@ -82,7 +105,6 @@ exports.updateUserProfile =  async (req, res, next) => {
           error: err
         });
       });
-    user.save();
   };
   
 /////////////////////////////// Add Address /////////////////////////////////
@@ -96,6 +118,8 @@ exports.addaddress = async (req, res, next) => {
   const addLine1 = req.body.addLine1;
   const addLine2 = req.body.addLine2;
   const landmark = req.body.landmark;
+  const city = req.body.city;
+  const state = req.body.state;
 
   const address = [{
     recname: recname,
@@ -103,12 +127,14 @@ exports.addaddress = async (req, res, next) => {
     pincode: pincode,
     addLine1: addLine1,
     addLine2: addLine2,
-    landmark: landmark
+    landmark: landmark,
+    city: city,
+    state: state
   }]
 
   const user = await User.findOne({userId});
 
-  user.address.push({ recname, recphone, pincode, addLine1, addLine2, landmark})
+  user.address.push({ recname, recphone, pincode, addLine1, addLine2, landmark, city, state})
 
   res.status(200).json({
       message: 'Address updated',
@@ -139,14 +165,18 @@ exports.updateAddress =  async (req, res, next) => {
     const addLine1 = req.body.addLine1;
     const addLine2 = req.body.addLine2;
     const landmark = req.body.landmark;
+    const city = req.body.city;
+    const state = req.body.state;
 
-  const address = [{
-    recname: recname,
-    recphone: recphone,
-    pincode: pincode,
-    addLine1: addLine1,
-    addLine2: addLine2,
-    landmark: landmark
+    const address = [{
+     recname: recname,
+     recphone: recphone,
+     pincode: pincode,
+     addLine1: addLine1,
+     addLine2: addLine2,
+     landmark: landmark,
+     city: city,
+     state: state
   }]
 
   const user = await User.findByIdAndUpdate({_id: userId, address: {_id: addressId} }, {$set: {address: address} })
@@ -155,8 +185,6 @@ exports.updateAddress =  async (req, res, next) => {
             message: 'User updated'
         });
 
-
-  user.save();
 
   }catch(err){
     console.log(err);

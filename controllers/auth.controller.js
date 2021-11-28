@@ -21,12 +21,21 @@ const {
 //   createJwtToken
 // } = require("../utils/token.util");
 
-const {
-  generateOTP,
-  fast2sms
-} = require("../utils/otp.util");
+const smsClient = require("../utils/otp.util");
+
 
 //-----------------------generate otp-------------------------------------
+
+function generateOTP (otp_length){
+  otp_length = 4;
+  var digits = "0123456789";
+  let OTP = "";
+  for (let i = 0; i < otp_length; i++) {
+    OTP += digits[Math.floor(Math.random() * 10)];
+  }
+  return OTP;
+};
+
 
 exports.registerOrLogin = async (req, res, next) =>{
   try{
@@ -44,30 +53,15 @@ exports.registerOrLogin = async (req, res, next) =>{
       User.findOneAndUpdate({phone: userFound.phone}, {$set : {"phoneOtp": otp}},
       {upsert:false,
       multi:false}).then( function(val){
+        const user = {phone: phone, otp: otp};
+        smsClient.sendVerificationMessage(user);
         res.status(200).json({
-        uid: userFound._id
+          message: "Otp sent"
       });},function(val){res.status(404).json({
         message: USER_NOT_FOUND_ERR
       });})
       
     });
-
-
-
-  // User.create({phone: phone}, {phoneOtp: otp}, function(err, val) {
-  //   User.findOrCreate({phone: phone}, {phoneOtp: otp}, function(err, user) {
-  //     res.status(200).json({
-  //            uid: user
-  //          });
-  //   })
-  // });
-
-
-  //   const user = await User.findOne({
-  //     phone
-  //   });
-    
-  //  await user.save();
 
   }catch(err){
     next(err);
@@ -75,115 +69,116 @@ exports.registerOrLogin = async (req, res, next) =>{
     
 }
 
-// --------------------- create new user ---------------------------------
+// // --------------------- create new user ---------------------------------
 
-exports.createNewUser = async  (req, res, next) => {
-  try {
+// exports.createNewUser = async  (req, res, next) => {
+//   try {
 
-    const storage = multer.diskStorage({
-      destination: (req, file, cb) => {
-        cb(null, 'uploads')
-      },
-      filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + Date.now())
-      }
-    });
+//     const storage = multer.diskStorage({
+//       destination: (req, file, cb) => {
+//         cb(null, 'uploads')
+//       },
+//       filename: (req, file, cb) => {
+//         cb(null, file.fieldname + '-' + Date.now())
+//       }
+//     });
 
-    const upload = multer({storage: storage});
+//     const upload = multer({storage: storage});
 
-    let {
-      phone,
-      name,
-      email,
-      address
-    } = req.body;
+//     let {
+//       phone,
+//       name,
+//       email,
+//       address
+//     } = req.body;
+
+//     let userImage = req.file;
 
 
+//     const phoneExist = await User.findOne({phone});
 
-    const phoneExist = await User.findOne({phone});
-
-    if (phoneExist) {
-      next({
-        status: 400,
-        message: PHONE_ALREADY_EXISTS_ERR
-      });
+//     if (phoneExist) {
+//       next({
+//         status: 400,
+//         message: PHONE_ALREADY_EXISTS_ERR
+//       });
       
-    }else{
-      const createUser = new User({
-        phone,
-        name,
-        email,
-        address,
-        role: phone === process.env.ADMIN_PHONE ? "ADMIN" : "USER"
-      });
+//     }else{
+//       const createUser = new User({
+//         phone,
+//         name,
+//         email,
+//         address,
+//         role: phone === process.env.ADMIN_PHONE ? "ADMIN" : "USER"
+//       });
   
   
-      const user = await createUser.save();
+//       const user = await createUser.save();
   
-      res.status(200).json({
-        type: "success",
-        message: "Account created OTP sended to mobile number",
-        data: {
-          userId: user._id,
-        },
-      });
+//       res.status(200).json({
+//         type: "success",
+//         message: "Account created OTP sended to mobile number",
+//         data: {
+//           userId: user._id,
+//         },
+//       });
   
       
-      await fast2sms({
-          message: `Your OTP is ${otp}`,
-          contactNumber: user.phone,
-        },
-        next
-      );  
+//       await smsClient({
+//           message: `Your OTP is ${otp}`,
+//           phone: user.phone
+//         },
+//         next
+//       );  
 
-    }
+//     }
 
-      } catch (error) {
-    next(error);
-  }
-};
+//       } catch (error) {
+//     next(error);
+//   }
+// };
 
-// ------------ login with phone otp ----------------------------------
+// // ------------ login with phone otp ----------------------------------
 
-exports.loginWithPhoneOtp = async (req, res, next) => {
-  try {
+// exports.loginWithPhoneOtp = async (req, res, next) => {
+//   try {
 
-    const {
-      phone
-    } = req.body;
-    const user = await User.findOne({
-      phone
-    });
+//     const {
+//       phone
+//     } = req.body;
+//     const user = await User.findOne({
+//       phone
+//     });
 
-    if (!user) {
-      next({
-        status: 400,
-        message: PHONE_NOT_FOUND_ERR
-      });
-    }else{
-      res.status(201).json({
-        type: "success",
-        message: "OTP sended to your registered phone number",
-        data: {
-          userId: user._id,
-        },
-      });
+//     if (!user) {
+//       next({
+//         status: 400,
+//         message: PHONE_NOT_FOUND_ERR
+//       });
+//     }else{
+//       res.status(201).json({
+//         type: "success",
+//         message: "OTP sended to your registered phone number",
+//         data: {
+//           userId: user._id,
+//         },
+//       });
   
-      const otp = generateOTP(4);
-      user.phoneOtp = otp;
-      user.isAccountVerified = true;
-      await user.save();
-      await fast2sms({
-          message: `Your OTP is ${otp}`,
-          contactNumber: user.phone,
-        },
-        next
-      );
-    }
-  } catch (error) {
-    next(error);
-  }
-};
+//       const otp = generateOTP(4);
+//       user.phoneOtp = otp;
+//       user.isAccountVerified = true;
+//       await user.save();
+//       await fast2sms({
+//           message: `Your OTP is ${otp}`,
+//           contactNumber: user.phone,
+//         },
+//         next
+//       );
+//     }
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // ---------------------- verify phone otp -------------------------
 
