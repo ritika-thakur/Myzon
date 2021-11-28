@@ -137,7 +137,7 @@ exports.addaddress = async (req, res, next) => {
   user.address.push({ recname, recphone, pincode, addLine1, addLine2, landmark, city, state})
 
   res.status(200).json({
-      message: 'Address updated',
+      message: 'Address Added',
   });
 
   user.save();
@@ -182,7 +182,7 @@ exports.updateAddress =  async (req, res, next) => {
   const user = await User.findByIdAndUpdate({_id: userId, address: {_id: addressId} }, {$set: {address: address} })
   
         res.status(200).json({
-            message: 'User updated'
+            message: 'Address Updated'
         });
 
 

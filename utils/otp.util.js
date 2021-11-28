@@ -19,35 +19,134 @@
 //     next(error);
 //   }
 // };
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+var http = require('http');
+
+var urlencode = require('urlencode');
+
+
+const sendMessage =  {sendVerificationMessage: user =>{
+
+    var username = "myzonsales@gmail.com";
+
+    var hash = urlencode('ae01d50559dc65319d30d5102c99c3a3e0bceef114e6bb12e86eddf986c36437'); 
+
+    var sender = urlencode('TXTLCL');
+
+    var msg=encodeURIComponent("Your Myzon verification code is ${user.otp}");
+
+    var data = '/send?username=' + username + '&hash=' + hash + '&sender=' + sender + '&numbers=' + user.phone + '&message=' +msg ;
+
+    var options = {
+
+      host: 'api.textlocal.in', path: data
+
+    };
+
+    callback = function (response) {
+
+      var str = '';
+
+      response.on('data', function (chunk) {
+
+        str += chunk;
+
+      });
+
+      response.on('end', function () {
+
+        // console.log(str);
+
+        res.end(JSON.stringify({ success: 'success' }));
+
+      });
+
+    }
+
+    console.log(options);
+
+    http.request(options, callback).end();
+
+}
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 
 const axios = require("axios");
 require('dotenv').config();
+//var tl = require('TextLocal')(validOptions);
 
 
 const { YOUR_API_KEY } = require("../config");
 
 
-const tlClient = axios.create({
-  baseURL: "https://api.textlocal.in/",
-  params: {
-    apiKey: YOUR_API_KEY, //Text local api key
-    sender: "6 CHARACTER SENDER ID"
-  }
-});
+
+var validOptions = { apikey: "MzA2OTVhNzA1MTZmNGM0ODUzNGU1NDVhNTQ0ZTZlNDE="};
+
+var tl = require('textlocal')(validOptions);
+
+// const tlClient = axios.create({
+//   baseURL: "https://api.textlocal.in/",
+//   params: {
+//     apiKey: YOUR_API_KEY, //Text local api key
+//     sender: "6 CHARACTER SENDER ID"
+//   }
+// });
 
 const smsClient =  {
-   sendVerificationMessage: user => {
-    if (user && user.phone) {
-      const params = new URLSearchParams();
-      params.append("numbers", [parseInt("91" + user.phone)]);
-      params.append(
-        "message",
-        `Your Myzon verification code is ${user.otp}`
-      );
-      tlClient.post("/send", params);
+   sendVerificationMessage: (user) => {
+     
+    var username = "myzonsales@gmail.com";
+
+    var hash = urlencode('ae01d50559dc65319d30d5102c99c3a3e0bceef114e6bb12e86eddf986c36437'); 
+
+    var sender = urlencode('TXTLCL');
+
+    var msg=encodeURIComponent("Your Myzon verification code is ${user.otp}");
+
+    var data = '/send?username=' + username + '&hash=' + hash + '&sender=' + sender + '&numbers=91' +user.phone + '&message=' +msg ;
+
+    var options = {
+
+      host: 'api.textlocal.in', path: data
+
+    };
+
+    callback = function (response) {
+
+      var str = '';
+
+      response.on('data', function (chunk) {
+
+        str += chunk;
+
+      });
+
+      response.on('end', function () {
+
+         console.log(str);
+
+        // res.end(JSON.stringify({ success: 'success' }));
+
+      });
+
     }
+
+    console.log(options);
+
+    http.request(options, callback).end();
+
   }
 }; 
 

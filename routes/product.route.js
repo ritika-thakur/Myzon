@@ -10,12 +10,23 @@ const Order = require("../models/order.model");
 const Product = require("../models/product.model");
 const { PORT } = require("../config");
 
+function makeid(length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * 
+charactersLength));
+ }
+ return result;
+}
+
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
         cb(null, './uploads');
     },
     filename:   function(req, file, cb){
-        cb(null, new Date().toISOString + file.originalname);
+        cb(null,makeid(12) + file.originalname);
     }
 })
 
@@ -68,19 +79,26 @@ productRouter.get("/", (req, res, next) => {
         error: err
       });
     });
+
 });
 
-productRouter.post("/", upload.single('productImage'), (req, res, next) => {
+productRouter.post("/", upload.any('productImage'), (req, res, next) => {
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
     description: req.body.description,
-    productImage: req.file,
     category: req.body.category,
     subcategory: req.body.subcategory,
     location: req.body.location
   });
+
+  for(var i=0;i<req.files.length;i++){
+    if (req.files[i] != null){
+      product.productImage.push(req.files[i].path);
+   }
+
+  }
   product
     .save()
     .then(result => {

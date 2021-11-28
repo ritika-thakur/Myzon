@@ -53,7 +53,7 @@ exports.registerOrLogin = async (req, res, next) =>{
       User.findOneAndUpdate({phone: userFound.phone}, {$set : {"phoneOtp": otp}},
       {upsert:false,
       multi:false}).then( function(val){
-        const user = {phone: phone, otp: otp};
+        const user = {phone: phone, otp: otp};  
         smsClient.sendVerificationMessage(user);
         res.status(200).json({
           message: "Otp sent"
