@@ -8,6 +8,7 @@ const checkAdmin = require("../middlewares/checkAdmin");
 
 const Order = require("../models/order.model");
 const Product = require("../models/product.model");
+const Seller = require("../models/seller.model");
 const { PORT } = require("../config");
 
 function makeid(length) {
@@ -48,7 +49,7 @@ const upload = multer({
 
 productRouter.get("/", (req, res, next) => {
   Product.find()
-    .select("name price _id description productImage category subcategory location")
+    .select("name price _id description productImage category subcategory location seller variant")
     .exec()
     .then(docs => {
       const response = {
@@ -63,6 +64,8 @@ productRouter.get("/", (req, res, next) => {
             subcategory: doc.subcategory,
             location: doc.location,
             productImage: doc.productImage,
+            seller: doc.seller,
+            variant: doc.variant,
             request: {
               type: "GET",
               url: PORT + "/products/" + doc._id
@@ -90,8 +93,11 @@ productRouter.post("/", upload.any('productImage'), (req, res, next) => {
     description: req.body.description,
     category: req.body.category,
     subcategory: req.body.subcategory,
-    location: req.body.location
+    location: req.body.location,
+    seller: req.body.seller,
+    variant: req.body.variant
   });
+
 
   for(var i=0;i<req.files.length;i++){
     if (req.files[i] != null){
@@ -114,6 +120,8 @@ productRouter.post("/", upload.any('productImage'), (req, res, next) => {
             subcategory: result.subcategory,
             location: result.location,
             _id: result._id,
+            seller: result.seller,
+            variant: result.variant,
             request: {
                 type: 'GET',
                 url: PORT + "/products/" + result._id
@@ -129,10 +137,10 @@ productRouter.post("/", upload.any('productImage'), (req, res, next) => {
     });
 });
 
-productRouter.get("/:productId",  (req, res, next) => {
-  const id = req.params.productId;
-  Product.findById(id)
-    .select('name price _id description category productImage subcategory location')
+productRouter.get("/getproduct",  (req, res, next) => {
+  const id = req.body.productId;
+  Product.findById({_id: id})
+    .select('name price _id description category productImage subcategory location seller variant')
     .exec()
     .then(doc => {
       console.log("From database", doc);
@@ -156,9 +164,9 @@ productRouter.get("/:productId",  (req, res, next) => {
     });
 });
 
-productRouter.put("/updateprod", (req, res, next) => {
+productRouter.put("/updateproduct", (req, res, next) => {
   try{
-    const id = req.body._id;
+    const id = req.body.id;
   
   const price = req.body.price;
   const name = req.body.name;
@@ -167,6 +175,9 @@ productRouter.put("/updateprod", (req, res, next) => {
   const subcategory = req.body.subcategory;
   const location = req.body.location;
   const productImage = req.file;
+  const seller = req.body.seller;
+  const variant = req.body.variant;
+  
 
   const productUpdates = {
     price: price,
@@ -175,7 +186,9 @@ productRouter.put("/updateprod", (req, res, next) => {
     category: category,
     subcategory: subcategory,
     location: location,
-    productImage: productImage
+    productImage: productImage,
+    seller: seller,
+    variant: variant
   }
 
   Product.updateOne({ _id: id }, { $set: {productUpdates} })
@@ -220,6 +233,8 @@ productRouter.post("/productbytype", async (req, res, next) => {
             subcategory: doc.subcategory,
             location: doc.location,
             productImage: doc.productImage,
+            seller: doc.seller,
+            variant: doc.variant,
             request: {
               type: "GET",
               url: PORT + "/products/" + doc._id
@@ -238,7 +253,7 @@ productRouter.post("/productbytype", async (req, res, next) => {
     });
   }else if(subcategory == null){
     Product.find({location:{$in:location}, category: {$in:category}})
-    .select("name price _id description productImage category subcategory location")
+    .select("name price _id description productImage category subcategory location seller")
     .exec()
     .then(docs => {
       const response = {
@@ -253,6 +268,8 @@ productRouter.post("/productbytype", async (req, res, next) => {
             subcategory: doc.subcategory,
             location: doc.location,
             productImage: doc.productImage,
+            seller: doc.seller,
+            variant: doc.variant,
             request: {
               type: "GET",
               url: PORT + "/products/" + doc._id
@@ -271,7 +288,7 @@ productRouter.post("/productbytype", async (req, res, next) => {
     });
   }else{
     Product.find({location:{$in:location}, category:{$in:category}, subcategory:{$in:subcategory}})
-    .select("name price _id description productImage category subcategory location")
+    .select("name price _id description productImage category subcategory location seller")
     .exec()
     .then(docs => {
       const response = {
@@ -286,6 +303,8 @@ productRouter.post("/productbytype", async (req, res, next) => {
             subcategory: doc.subcategory,
             location: doc.location,
             productImage: doc.productImage,
+            seller: doc.seller,
+            variant: doc.variant,
             request: {
               type: "GET",
               url: PORT + "/products/" + doc._id
@@ -336,4 +355,38 @@ productRouter.delete("/:productId", (req, res, next) => {
     });
 });
 
+
+
+productRouter.post("/addvariant", async (req, res, next) => {
+  try{
+    const color = req.body.color;
+    const size = req.body.size;
+    const type = req.body.type;
+    const qty = req.body.qty;
+
+    const productId = req.body.productId; 
+
+    const variant = [{
+      color: color,
+      size: size,
+      type: type,
+      qty: qty
+    }]
+
+
+    const product = await Product.findOneAndUpdate({_id: productId}, {$set: {variant: variant}});
+
+    product.variant.push(variant);
+
+    res.status(200).json({
+      message: 'Variant Added',
+  });
+
+  }catch(err) {
+    console.log(err);
+    res.status(500).json({
+      error: err
+    });
+  };
+})
 module.exports = productRouter;

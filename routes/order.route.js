@@ -7,6 +7,7 @@ const checkAdmin = require("../middlewares/checkAdmin");
 
 const Order = require("../models/order.model");
 const Product = require("../models/product.model");
+const Cart = require("../models/cart.model");
 const { PORT } = require("../config");
 
 // Handle incoming GET requests to /orders
@@ -23,6 +24,7 @@ orderRouter.get("/", checkAuth, (req, res, next) => {
             product: doc.product,
             quantity: doc.quantity,
             dvlStatus: doc.dvlStatus,
+            seller: req.body.seller,
             request: {
               type: "GET",
               url: PORT +"/orders/" + doc._id
@@ -50,7 +52,8 @@ orderRouter.post("/", checkAuth, (req, res, next) => {
         _id: mongoose.Types.ObjectId(),
         quantity: req.body.quantity,
         product: req.body.productId,
-        dvlstatus: req.body.dvlstatus
+        dvlstatus: req.body.dvlstatus,
+        seller: req.body.seller
       });
       return order.save();
     })
@@ -62,7 +65,8 @@ orderRouter.post("/", checkAuth, (req, res, next) => {
           _id: result._id,
           product: result.product,
           quantity: result.quantity,
-          dvlStatus: result.dvlstatus
+          dvlStatus: result.dvlstatus,
+          seller: req.body.seller
         },
         request: {
           type: "GET",
@@ -76,6 +80,20 @@ orderRouter.post("/", checkAuth, (req, res, next) => {
         error: err
       });
     });
+});
+
+orderRouter.post("/placedorder", (req, res, next) => {
+  const {userId} = req.body;
+  Cart.findOne({userId})
+  .exec()
+  .then(result => {
+    if(!result){
+      return res.status(404).json({
+        message: "Order not found"
+      });
+    }
+    console.log(result)
+  })
 });
 
 orderRouter.get("/:orderId", checkAuth, (req, res, next) => {

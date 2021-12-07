@@ -8,10 +8,15 @@ const CartSchema = new mongoose.Schema(
     },
     products: [
       {
-        productId: String,
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product"
+        },
         quantity: Number,
-        name: String,
-        price: Number
+        variant: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product"
+        }
       }
     ],
     active: {
@@ -23,6 +28,7 @@ const CartSchema = new mongoose.Schema(
       default: Date.now
     }
   },
+
   { timestamps: true }
 );
 

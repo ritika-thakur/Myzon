@@ -3,13 +3,15 @@ var wishlistRouter = express.Router()
 
 var Product = require("../models/product.model");
 
+var WishList = require("../models/wishlist.model")
+
 wishlistRouter.post("/wishList", async (req, res) => {
     const { productId, name, price } = req.body;
   
-    const userId = req.user._id
-  
+    const userId = req.body.userId;
+
     try {
-      let wishList = await wishList.findOne({ userId });
+      let wishList = await WishList.findOne({ userId: userId });
   
       if (wishList) {
         
@@ -21,17 +23,17 @@ wishlistRouter.post("/wishList", async (req, res) => {
           wishList.products[itemIndex] = productItem;
         } else {
           
-          wishList.products.push({ productId, name, price });
+          wishList.products.push({ productId: productId, name: name, price: price});
         }
         wishList = await wishList.save();
         return res.status(201).send(wishList);
       } else {
         
-        const newwishList = await wishList.create({
-          userId,
-          products: [{ productId, name, price }]
+        const newwishList = await WishList.create({
+          userId: userId,
+          products: [{ productId: productId, name: name, price: price }]
         });
-  
+
         return res.status(201).send(newwishList);
       }
     } catch (err) {

@@ -30,14 +30,17 @@ cartRouter.post("/", async (req, res) => {
 
 
 cartRouter.post("/addcart", async (req, res) => {
-    const { productId, quantity, name, price } = req.body;
-  
+    
+    const { productId, quantity, name, price, variant} = req.body;
+    
     const {userId} = req.body;
 
     let qty = parseInt(quantity);
   
     try {
       let cart = await Cart.findOne({ userId });
+
+      console.log(variant)
   
       if (cart) {
         
@@ -50,15 +53,16 @@ cartRouter.post("/addcart", async (req, res) => {
           cart.products[itemIndex] = productItem;
         } else {
           
-          cart.products.push({ productId, quantity, name, price });
+          cart.products.push({ productId, quantity, name, price, variant });
         }
         cart = await cart.save();
         return res.status(201).send(cart);
       } else {
         
+      
         const newCart = await Cart.create({
-          userId,
-          products: [{ productId, quantity, name, price }]
+          userId: userId,
+          products: [{ productId, quantity, name, price, variant }]
         });
   
         return res.status(201).send(newCart);

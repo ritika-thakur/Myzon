@@ -132,7 +132,7 @@ exports.addaddress = async (req, res, next) => {
     state: state
   }]
 
-  const user = await User.findOne({userId});
+  const user = await User.findOne({_id: userId});
 
   user.address.push({ recname, recphone, pincode, addLine1, addLine2, landmark, city, state})
 

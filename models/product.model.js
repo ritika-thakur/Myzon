@@ -3,6 +3,7 @@ require('mongoose-currency').loadType(mongoose);
 const Currency = mongoose.Types.Currency;
 
 
+
 const productVariantSchema = new mongoose.Schema({
     color:{
         type: String,
@@ -13,6 +14,9 @@ const productVariantSchema = new mongoose.Schema({
     type:{
         type:String,
     },
+    qty: {
+        type:Number
+    }
 });
 
 const productSchema = new mongoose.Schema({ 
@@ -45,9 +49,13 @@ const productSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    varient:[productVariantSchema],
+    variant:[productVariantSchema],
+    sellerId: {
+        type: String
+    } ,
 }, {
     timestamps: true
 });
+
 
 module.exports = mongoose.model("Product", productSchema);

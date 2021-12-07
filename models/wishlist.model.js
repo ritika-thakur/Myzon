@@ -4,15 +4,14 @@ const wishListSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
+      required: true
     },
-    products: [
-      {
-        productId: Number,
-        name: String,
-        price: Number
-      }
-    ],
+    products: [{
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'Product', 
+      required: true 
+    }],
     active: {
       type: Boolean,
       default: true
@@ -25,4 +24,4 @@ const wishListSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Wishlist", wishListSchema);
+module.exports = mongoose.model("wishList", wishListSchema);
