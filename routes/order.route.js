@@ -11,7 +11,7 @@ const Cart = require("../models/cart.model");
 const { PORT } = require("../config");
 
 // Handle incoming GET requests to /orders
-orderRouter.get("/", checkAuth, (req, res, next) => {
+orderRouter.get("/", (req, res, next) => {
   Order.find()
     .select("product quantity _id dvlStatus")
     .exec()
@@ -40,7 +40,10 @@ orderRouter.get("/", checkAuth, (req, res, next) => {
     });
 });
 
+
 orderRouter.post("/", checkAuth, (req, res, next) => {
+  const orderConfirm = req.body.orderConfirm;
+
   Product.findById(req.body.productId)
     .then(product => {
       if (!product) {

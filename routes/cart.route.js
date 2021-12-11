@@ -1,23 +1,51 @@
-var express = require('express');
-var cartRouter = express.Router();
+const express = require('express');
+const cartRouter = express.Router();
 
 
-var Product = require("../models/product.model");
+const Product = require("../models/product.model");
 
-var Cart = require("../models/cart.model");
+const Cart = require("../models/cart.model");
+const Order = require("../models/order.model");
 
+cartRouter.get("/", async(req, res) => {
+  const {userId} = req.body;
+
+  try{
+    Cart.findById({userId})
+    .select("userId products")
+    .exec()
+    .then(docs => {
+
+    })
+  }catch(err){
+    next(err);
+  }
+})
 
 cartRouter.post("/", async (req, res) => {
 
   const {userId} = req.body;
-
+  const confirmOrder = req.body.confirmOrder;
   try{
-    let cart = await Cart.findOne({ userId });
 
     if(cart){
       return res.status(201).send(cart);
     }else{
       return res.status(404).json({message: "Cart not found."});
+
+    let cart = await Cart.findOne({ userId });
+    if (cart){
+    var productDataList=[]
+    cart.products.forEach( (product)=>{
+      console.log(product);
+      let proId = product.productId;
+      let productData =  Product.findById({proId});
+      console.log(productData);
+      });
+    }
+    confirmOrder.addEventListener('click', function(req, res, next){
+      Order.insertMany()
+    })
     }
 
   }catch(err){
@@ -40,7 +68,7 @@ cartRouter.post("/addcart", async (req, res) => {
     try {
       let cart = await Cart.findOne({ userId });
 
-      console.log(variant)
+      //console.log(variant)
   
       if (cart) {
         
